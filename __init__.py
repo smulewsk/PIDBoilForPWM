@@ -11,10 +11,11 @@ class PIDBoilForPWM(KettleController):
     a_p = Property.Number("P", True, 102, description="P Value of PID")
     b_i = Property.Number("I", True, 100, description="I Value of PID")
     c_d = Property.Number("D", True, 5, description="D Value of PID")
-    d_max_out = Property.Number("max. output %", True, 100, description="Power which is set above boil threshold")
-    e_boil = Property.Number("Boil Threshold", True, 80,description="Temperatre for Boil threshold. Full power mode!")
-    f_boil_power = Property.Number("boil power %", True, 80,description="Power above Boil threshold!")
-    g_sample_time = Property.Number("sample time in s", True, 2,description="Speed of the controller!")
+    d_max_out = Property.Number("max power %", True, 100, description="Max power for PID and during ramp-up")
+    e_boil = Property.Number("PID threshold", True, 80,description="Temperatre for PID threshold")
+    f_max_boil_out = Property.Number("boil power %", True, 80,description="Power value in boil mode")
+    g_max_boil = Property.Number("boil temperature", True, 98,description="When  reached this boil temperature kettle power is changed to boil power")
+    h_sample_time = Property.Number("sample time in s", True, 2,description="Speed of the PID controller!")
 
     def stop(self):
         '''
@@ -34,13 +35,16 @@ class PIDBoilForPWM(KettleController):
         i = float(self.b_i)
         d = float(self.c_d)
         maxout = float(self.d_max_out)
-        boilpower = self.f_boil_power
+        boilpower = self.f_max_boil_out
         pid = PIDArduino(sampleTime, p, i, d, 0, maxout)
 
         while self.is_running():
 
-            if self.get_temp() >= float(self.e_boil):
-                self.heater_on(boilpower)
+            if self.get_temp() >= float(self.g_max_boil):
+                self.heater_update(boilpower)
+                self.sleep(sampleTime)
+            elif self.get_temp() >= float(self.e_boil):
+                self.heater_update(maxout)
                 self.sleep(sampleTime)
             else:
                 heat_percent = pid.calc(self.get_temp(), self.get_target_temp())
