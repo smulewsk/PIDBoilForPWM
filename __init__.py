@@ -42,21 +42,21 @@ class PIDBoilForPWM(Wrapper):
 
     def run(self):
 
-        sampleTime = float(self.g_sample_time)
+        sampleTime = float(self.h_sample_time)
         wait_time = sampleTime
         p = float(self.a_p)
         i = float(self.b_i)
         d = float(self.c_d)
         maxout = float(self.d_max_out)
-        boilpower = self.f_max_boil_out
+        boilpower = float(self.f_max_boil_out)
         pid = PIDArduino(sampleTime, p, i, d, 0, maxout)
 
         while self.is_running():
 
-            if self.get_temp() >= float(self.g_max_boil):
+            if self.get_temp() > float(self.g_max_boil):
                 self.heater_update(boilpower)
                 self.sleep(sampleTime)
-            elif self.get_target_temp() >= float(self.e_boil):
+            elif self.get_target_temp() > float(self.e_boil):
                 self.heater_update(maxout)
                 self.sleep(sampleTime)
             else:
