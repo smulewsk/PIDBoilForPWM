@@ -6,7 +6,7 @@ from modules.core.controller import KettleController
 from modules.core.props import Property
 
 @cbpi.controller
-class PIDBoil(KettleController):
+class PIDBoilForPWM(KettleController):
 
     a_p = Property.Number("P", True, 102, description="P Value of PID")
     b_i = Property.Number("I", True, 100, description="I Value of PID")
