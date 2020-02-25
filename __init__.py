@@ -1,7 +1,7 @@
 import logging
 import time
 
-from modules import cbpi
+from modules import cbpi,app
 from modules.core.controller import KettleController
 from modules.core.props import Property
 
@@ -28,7 +28,7 @@ class PIDBoilForPWM(KettleController):
 
     def run(self):
 
-        sampleTime = self.g_sample_time
+        sampleTime = float(self.g_sample_time)
         wait_time = sampleTime
         p = float(self.a_p)
         i = float(self.b_i)
@@ -44,15 +44,21 @@ class PIDBoilForPWM(KettleController):
                 self.sleep(sampleTime)
             else:
                 heat_percent = pid.calc(self.get_temp(), self.get_target_temp())
-                heating_time = sampleTime * heat_percent / 100
-                wait_time = sampleTime - heating_time
-                self.heater_on(int(heat_percent))
-                if heat_percent == 0:
-                #self.sleep(heating_time)
-                    self.heater_off()
-                #self.sleep(wait_time)
-                self._logger.debug(heat_percent)
+                self.heater_update(int(heat_percent))
+                app.logger.info('heat_percent: {0}'.format(heat_percent))
                 self.sleep(sampleTime)
+
+    def heater_update(self, power=100):
+        k = self.api.cache.get("kettle").get(self.kettle_id)
+        if k.heater is not None:
+            actor = self.api.cache.get("actors").get(int(k.heater))
+            if actor.state == 1 and power > 0:
+                self.actor_power(power, int(k.heater))
+            elif actor.state == 0 and power > 0:
+                self.heater_on(power)
+            elif actor.state == 1:
+                self.actor_power(power)
+                self.heater_off()
 
 # Based on Arduino PID Library
 # See https://github.com/br3ttb/Arduino-PID-Library
