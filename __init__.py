@@ -5,8 +5,21 @@ from modules import cbpi,app
 from modules.core.controller import KettleController
 from modules.core.props import Property
 
+class Wrapper(KettleController):
+
+    def heater_update(self, power=100):
+        if self.heater is not None:
+            actor = self.api.cache.get("actors").get(int(self.heater))
+            if actor.state == 1 and power > 0:
+                self.actor_power(power, int(self.heater))
+            elif actor.state == 0 and power > 0:
+                self.heater_on(power)
+            elif actor.state == 1:
+                self.actor_power(power)
+                self.heater_off()
+
 @cbpi.controller
-class PIDBoilForPWM(KettleController):
+class PIDBoilForPWM(Wrapper):
 
     a_p = Property.Number("P", True, 102, description="P Value of PID")
     b_i = Property.Number("I", True, 100, description="I Value of PID")
@@ -51,18 +64,6 @@ class PIDBoilForPWM(KettleController):
                 self.heater_update(int(heat_percent))
                 app.logger.info('heat_percent: {0}'.format(heat_percent))
                 self.sleep(sampleTime)
-
-    def heater_update(self, power=100):
-        k = self.api.cache.get("kettle").get(self.kettle_id)
-        if k.heater is not None:
-            actor = self.api.cache.get("actors").get(int(k.heater))
-            if actor.state == 1 and power > 0:
-                self.actor_power(power, int(k.heater))
-            elif actor.state == 0 and power > 0:
-                self.heater_on(power)
-            elif actor.state == 1:
-                self.actor_power(power)
-                self.heater_off()
 
 # Based on Arduino PID Library
 # See https://github.com/br3ttb/Arduino-PID-Library
