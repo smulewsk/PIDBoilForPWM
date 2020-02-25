@@ -43,7 +43,7 @@ class PIDBoilForPWM(KettleController):
             if self.get_temp() >= float(self.g_max_boil):
                 self.heater_update(boilpower)
                 self.sleep(sampleTime)
-            elif self.get_temp() >= float(self.e_boil):
+            elif self.get_target_temp() >= float(self.e_boil):
                 self.heater_update(maxout)
                 self.sleep(sampleTime)
             else:
