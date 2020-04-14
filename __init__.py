@@ -53,17 +53,18 @@ class PIDBoilForPWM(Wrapper):
 
         while self.is_running():
 
-            if self.get_temp() > float(self.g_max_boil):
+            if self.get_target_temp()==0:
+                self.heater_update(0)
+            elif self.get_temp() > float(self.g_max_boil):
                 self.heater_update(boilpower)
-                self.sleep(sampleTime)
             elif self.get_target_temp() > float(self.e_boil):
                 self.heater_update(maxout)
-                self.sleep(sampleTime)
             else:
                 heat_percent = pid.calc(self.get_temp(), self.get_target_temp())
                 self.heater_update(int(heat_percent))
-                app.logger.info('heat_percent: {0}'.format(heat_percent))
-                self.sleep(sampleTime)
+                #app.logger.info('heat_percent: {0}'.format(heat_percent))
+
+            self.sleep(sampleTime)
 
 # Based on Arduino PID Library
 # See https://github.com/br3ttb/Arduino-PID-Library
